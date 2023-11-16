@@ -1,24 +1,24 @@
-const path = require('path');
-
+const cors = require("cors");
 const express = require('express');
+const routes = require('./routes/routes');
 const bodyParser = require('body-parser');
-
-const errorController = require('./controllers/error');
+const sequelize = require('./util/database');
+const t = require('./config/updateDB');
 
 const app = express();
 
-app.set('view engine', 'ejs');
-app.set('views', 'views');
-
-const adminRoutes = require('./routes/admin');
-const shopRoutes = require('./routes/shop');
-
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/admin', adminRoutes);
-app.use(shopRoutes);
+app.use('/general', routes);
 
-app.use(errorController.get404);
+// t();
 
-app.listen(3000);
+sequelize
+  .sync()
+  .then(() => {
+    app.listen(3000);
+  })
+  .catch(err => {
+    console.log(err);
+  });
