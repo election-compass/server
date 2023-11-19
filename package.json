@@ -4,17 +4,19 @@
   "description": "Complete Node.js Guide",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "nodemon app.js",
     "start-server": "node app.js"
   },
   "author": "Maximilian Schwarzmüller",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^1.18.3"
+    "jest": "^29.7.0",
+    "nodemon": "^1.18.3",
+    "supertest": "^6.3.3"
   },
   "dependencies": {
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "ejs": "^2.6.1",
     "exceljs": "^4.4.0",

@@ -2,20 +2,21 @@ const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
 const Vote = sequelize.define('vote', {
-  bill_id: {
+  billId: {
     type: Sequelize.INTEGER,
     allowNull: false,
     primaryKey: true
   },
-  kn_member_id: {
+  mkId: {
     type: Sequelize.INTEGER,
     allowNull: false,
+    primaryKey: true
   },
-  kn_member_name: {
+  mkName: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  kn_member_vote: {
+  mkVote: {
     type: Sequelize.STRING,
     allowNull: false
   }

@@ -8,10 +8,10 @@ const t = require('./config/updateDB');
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use('/general', routes);
-
+// t.votingScript();
 // t();
 
 sequelize
