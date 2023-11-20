@@ -31,16 +31,22 @@ exports.postUserVotes = async (req, res) => {
       });
       
       // map all votes to their voter
-      votes.forEach((vote) => {
+      for(const vote of votes) {
         const { billId, mkId, mkVote } = vote.dataValues;
         const mkVoteInt = localUtils.voteStringToInt(mkVote);
+
+        const bills = await Bills.findAll({
+          where: { id: billId },
+          attributes: ["name"],
+        });
+        const { name } = bills[0].dataValues;
         
         if (data.has(mkId)) {
-          data.get(mkId).push({ billId, mkVote: mkVoteInt });
+          data.get(mkId).push({ billId, mkVote: mkVoteInt, billName: name });
           return;
         }
-        data.set(mkId, [{ billId, mkVote: mkVoteInt }]);
-      });
+        data.set(mkId, [{ billId, mkVote: mkVoteInt, billName: name }]);
+      };
     }
 
     const scores = localUtils.findScoresToMembers(
