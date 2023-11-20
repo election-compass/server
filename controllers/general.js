@@ -18,6 +18,7 @@ exports.getBills = async (req, res) => {
 
 exports.postUserVotes = async (req, res) => {
   const body = req.body;
+  const mappedUserVotes = new Map(Object.entries(body).map(([key, value]) => [parseInt(key, 10), value]));
   const selectedBills = Object.keys(body);
   const data = new Map();
 
@@ -43,7 +44,7 @@ exports.postUserVotes = async (req, res) => {
     }
 
     const scores = localUtils.findScoresToMembers(
-      body,
+      mappedUserVotes,
       data,
       selectedBills.length
     );

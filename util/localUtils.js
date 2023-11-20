@@ -32,17 +32,21 @@ exports.voteStringToInt = (vote) => {
 exports.findScoresToMembers = (userVotes, members_vote_object, totalBills) => {
   const res = new Map();
   const relativePoint = MAX_GRADE / totalBills;
-
   members_vote_object.forEach((mkData, mkId) => {
+    
     let currentScore = res.get(mkId) || NEUTRAL_SCORE;
 
-    //if the user has voted on current bull
-    if (userVotes[mkData.billId] !== NEUTRAL_VOTE) {
-      currentScore +=
-      mkData.mkVote === userVotes[mkData.billId] ? relativePoint : NEUTRAL_SCORE;
-    } else {
-      currentScore += relativePoint;
-    }
+    mkData.forEach((current) => {
+      //if the user has voted on current bull
+      if (userVotes.get(current["billId"]) !== NEUTRAL_VOTE) {
+        currentScore +=
+        current["mkVote"] === userVotes.get(current["billId"])
+            ? relativePoint
+            : NEUTRAL_SCORE;
+      } else {
+        currentScore += relativePoint;
+      }
+    });
     res.set(mkId, currentScore);
   });
   return res;
