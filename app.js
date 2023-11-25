@@ -2,23 +2,20 @@ const cors = require("cors");
 const express = require('express');
 const routes = require('./routes/routes');
 const bodyParser = require('body-parser');
-const sequelize = require('./util/database');
-const t = require('./config/updateDB');
+const updateDb = require('./config/updateDB');
 
 const app = express();
+
+const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/general', routes);
-// t.votingScript();
-// t();
 
-sequelize
-  .sync()
-  .then(() => {
-    app.listen(3000);
-  })
-  .catch(err => {
-    console.log(err);
-  });
+updateDb.updateBillsTable('Votes 2021-2023 (1).xlsx');
+updateDb.updateVotesTable('Votes 2021-2023 (3).xlsx');
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

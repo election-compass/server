@@ -1,79 +1,70 @@
-const Bills = require("../models/Bill");
-const Votes = require("../models/Vote");
-const localUtils = require("../util/localUtils");
+const db = require('../util/database');
+const localUtils = require('../util/localUtils');
 
 exports.getBills = async (req, res) => {
   const { knessetNum } = req.query;
-  const filter = knessetNum ? { knesset_num: knessetNum } : {}; //filter by knesset num if given
+  const filter = knessetNum ? ` WHERE knessetNum = ${db.escape(knessetNum)}` : '';
+
   try {
-    const bills = await Bills.findAll({
-      where: filter,
-      attributes: ["id", "name"],
-    });
+    const query = `SELECT * FROM bills`;
+    
+    const [bills] = await db.query(query + filter);
     return res.status(200).json(bills);
   } catch (error) {
-    return res.status(404).json(error.message);
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
 exports.postUserVotes = async (req, res) => {
   const body = req.body;
-  const mappedUserVotes = new Map(Object.entries(body).map(([key, value]) => [parseInt(key, 10), value]));
   const selectedBills = Object.keys(body);
   const data = new Map();
 
   try {
     for (const bill of selectedBills) {
-      // fetch all voters associated with current bill
-      const votes = await Votes.findAll({
-        where: { billId: bill },
-        attributes: ["billId", "mkId", "mkVote"],
-      });
-      
-      // map all votes to their voter
-      for(const vote of votes) {
-        const { billId, mkId, mkVote } = vote.dataValues;
+      // Fetch all voters associated with the current bill
+      const votesQuery = `SELECT billId, mkId, mkVote FROM votes WHERE billId = ${db.escape(bill)}`;
+      const votes = await db.query(votesQuery);
+
+      // Map all votes to their voter
+      for (const vote of votes) {
+        const { billId, mkId, mkVote } = vote;
         const mkVoteInt = localUtils.voteStringToInt(mkVote);
 
-        const bills = await Bills.findAll({
-          where: { id: billId },
-          attributes: ["name"],
-        });
-        const { name } = bills[0].dataValues;
-        
+        const billQuery = `SELECT name FROM bills WHERE id = ${db.escape(billId)}`;
+        const bills = await db.query(billQuery);
+        const { name } = bills[0];
+
         if (data.has(mkId)) {
           data.get(mkId).push({ billId, mkVote: mkVoteInt, billName: name });
-          return;
+        } else {
+          data.set(mkId, [{ billId, mkVote: mkVoteInt, billName: name }]);
         }
-        data.set(mkId, [{ billId, mkVote: mkVoteInt, billName: name }]);
-      };
+      }
     }
 
-    const scores = localUtils.findScoresToMembers(
-      mappedUserVotes,
-      data,
-      selectedBills.length
-    );
-    
-    //update data with score and km name
+    const scores = localUtils.findScoresToMembers(Object.entries(body), data, selectedBills.length);
+
+    // Update data with score and mk name
     try {
       for (const [mkId, mkScore] of scores) {
         const existingData = data.get(mkId);
         data.delete(mkId);
 
-        const mkName = await Votes.findOne({
-          where: { mkId },
-          attributes: ["mkName"],
-        });
-        data.set(mkName.dataValues.mkName, {votes: existingData, score: mkScore})
+        const mkNameQuery = `SELECT mkName FROM votes WHERE mkId = ${db.escape(mkId)}`;
+        const mkNameResult = await db.query(mkNameQuery);
+        const mkName = mkNameResult[0].mkName;
+
+        data.set(mkName, { votes: existingData, score: mkScore });
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     return res.status(200).json(Array.from(data));
   } catch (error) {
-    console.log(error);
-    return res.status(404).json(error.message);
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
